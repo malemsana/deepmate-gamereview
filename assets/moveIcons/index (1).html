@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepMate Icon Gallery</title>
+  <style>
+    :root {
+      --bg-main: #0a0c10;
+      --bg-card: #16191e;
+      --text-main: #e1e7ed;
+      --text-muted: #8b949e;
+      --border-color: #30363d;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background-color: var(--bg-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text-main);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    p {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .icon-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .icon-card:hover {
+      transform: translateY(-4px);
+      border-color: #58a6ff;
+    }
+
+    .icon-wrapper {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 50%;
+      padding: 10px;
+    }
+
+    .icon-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .icon-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .icon-filename {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background-color: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      border-radius: 6px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>DeepMate</h1>
+      <p>Move Classification Icon Gallery</p>
+    </header>
+
+    <div class="gallery-grid">
+      <!-- 1. Brilliant -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_brilliant.svg" alt="Brilliant">
+        </div>
+        <div class="icon-name">Brilliant</div>
+        <div class="icon-filename">icon_brilliant.svg</div>
+      </div>
+
+      <!-- 2. Great Move -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_great.svg" alt="Great Move">
+        </div>
+        <div class="icon-name">Great Move</div>
+        <div class="icon-filename">icon_great.svg</div>
+      </div>
+
+      <!-- 3. Best Move -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_best.svg" alt="Best Move">
+        </div>
+        <div class="icon-name">Best Move</div>
+        <div class="icon-filename">icon_best.svg</div>
+      </div>
+
+      <!-- 4. Excellent -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_excellent.svg" alt="Excellent">
+        </div>
+        <div class="icon-name">Excellent</div>
+        <div class="icon-filename">icon_excellent.svg</div>
+      </div>
+
+      <!-- 5. Good -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_good.svg" alt="Good">
+        </div>
+        <div class="icon-name">Good</div>
+        <div class="icon-filename">icon_good.svg</div>
+      </div>
+
+      <!-- 6. Book -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_book.svg" alt="Book">
+        </div>
+        <div class="icon-name">Book</div>
+        <div class="icon-filename">icon_book.svg</div>
+      </div>
+
+      <!-- 7. Forced -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_forced.svg" alt="Forced">
+        </div>
+        <div class="icon-name">Forced</div>
+        <div class="icon-filename">icon_forced.svg</div>
+      </div>
+
+      <!-- 8. Inaccuracy -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_inaccuracy.svg" alt="Inaccuracy">
+        </div>
+        <div class="icon-name">Inaccuracy</div>
+        <div class="icon-filename">icon_inaccuracy.svg</div>
+      </div>
+
+      <!-- 9. Mistake -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_mistake.svg" alt="Mistake">
+        </div>
+        <div class="icon-name">Mistake</div>
+        <div class="icon-filename">icon_mistake.svg</div>
+      </div>
+
+      <!-- 10. Blunder -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_blunder.svg" alt="Blunder">
+        </div>
+        <div class="icon-name">Blunder</div>
+        <div class="icon-filename">icon_blunder.svg</div>
+      </div>
+
+      <!-- 11. Miss -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_miss.svg" alt="Miss">
+        </div>
+        <div class="icon-name">Miss</div>
+        <div class="icon-filename">icon_miss.svg</div>
+      </div>
+
+      <!-- 12. Missed Win -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_missed-win.svg" alt="Missed Win">
+        </div>
+        <div class="icon-name">Missed Win</div>
+        <div class="icon-filename">icon_missed_win.svg</div>
+      </div>
+
+      <!-- 13. Missed Draw -->
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="icon_missed-draw.svg" alt="Missed Draw">
+        </div>
+        <div class="icon-name">Missed Draw</div>
+        <div class="icon-filename">icon_missed_draw.svg</div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
