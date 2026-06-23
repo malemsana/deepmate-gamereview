@@ -409,7 +409,7 @@ body {
     align-items: center;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .square.light {
@@ -469,23 +469,23 @@ body {
     position: absolute;
     top: 0px;
     right: 0px;
-    transform: translate(30%, -30%);
-    width: 22px;
-    height: 22px;
+    transform: translate(33%, -33%);
+    width: 33px;
+    height: 33px;
     z-index: 20;
     pointer-events: none;
     animation: badge-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes badge-pop {
-    0% { transform: translate(30%, -30%) scale(0); }
-    100% { transform: translate(30%, -30%) scale(1); }
+    0% { transform: translate(33%, -33%) scale(0); }
+    100% { transform: translate(33%, -33%) scale(1); }
 }
 
 @media (max-width: 800px) {
     .move-status-badge {
-        width: 18px;
-        height: 18px;
+        width: 27px;
+        height: 27px;
     }
 }
 
