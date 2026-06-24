@@ -163,6 +163,62 @@ function setupEventListeners() {
       pvText.innerText = pvMoves;
     }
   });
+  
+  window.addEventListener('self-analysis-compiled', (e) => {
+    const { move, classification, comment, evalScore } = e.detail;
+    
+    const badgeColors = {
+      brilliant: 'var(--color-brilliant)',
+      great: 'var(--color-great)',
+      best: 'var(--color-best)',
+      excellent: 'var(--color-excellent)',
+      good: 'var(--color-good)',
+      book: 'var(--color-book)',
+      forced: 'var(--color-forced)',
+      inaccuracy: 'var(--color-inaccuracy)',
+      mistake: 'var(--color-mistake)',
+      blunder: 'var(--color-blunder)',
+      miss: 'var(--color-miss)',
+      missed_win: 'var(--color-missed-win)',
+      missed_draw: 'var(--color-missed-draw)'
+    };
+    
+    if (coachBadgeIcon) {
+      coachBadgeIcon.innerHTML = `<img src="assets/moveIcons/icon_${classification.replace('_', '-')}.svg" style="width: 20px; height: 20px; display: block;" alt="${classification}"/>`;
+    }
+    if (coachBadgeText) {
+      coachBadgeText.innerText = `${move.san} is a ${classification.replace('_', ' ')} move`;
+      coachBadgeText.style.color = badgeColors[classification] || 'inherit';
+    }
+    
+    if (coachEvalValue) {
+      let scoreText = evalScore > 0 ? '+' : '';
+      if (Math.abs(evalScore) === 99.0) {
+        scoreText = evalScore > 0 ? 'M' : '-M';
+      } else {
+        scoreText += evalScore.toFixed(2);
+      }
+      coachEvalValue.innerText = scoreText;
+    }
+    
+    if (coachExplanation) {
+      coachExplanation.innerText = comment;
+    }
+    
+    // Sync Vertical Eval Bar height
+    let barVal = evalScore;
+    if (Math.abs(evalScore) === 99.0) {
+      barVal = evalScore > 0 ? 8.0 : -8.0;
+    }
+    let pct = ((barVal + 8.0) / 16.0) * 100;
+    if (pct > 95) pct = 95;
+    if (pct < 5) pct = 5;
+    if (evalBarFill) evalBarFill.style.height = `${pct}%`;
+    if (evalBarText) evalBarText.innerText = Math.abs(barVal).toFixed(1);
+    
+    // Re-draw board badges
+    updateBoardDisplay();
+  });
 }
 
 // Exit Variations Mode
@@ -457,7 +513,7 @@ function handleStartAnalysis() {
     
     if (engineReady && engineWorker) {
       startEngineAnalysis(
-        10,
+        20,
         (current, total) => {
           const progressPercent = Math.round((current / total) * 100);
           loadingProgressFill.style.width = `${progressPercent}%`;

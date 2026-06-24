@@ -13,14 +13,15 @@ export let engineWorker = null;
 export let engineReady = false;
 export let isAnalyzing = false;
 
+let latestEvalScore = 0.0;
 let analysisProgressCallback = null;
 let analysisCompleteCallback = null;
-let currentDepth = 10;
+let currentDepth = 20;
 
 // Initialize Stockfish WASM Web Worker
 export function initEngineWorker(onReady, onMessage) {
   try {
-    engineWorker = new Worker('js/stockfish/stockfish-nnue-16-single.js');
+    engineWorker = new Worker('js/stockfish/stockfish-18-lite-single.js');
     
     engineWorker.onmessage = function(e) {
       const line = e.data;
@@ -61,6 +62,7 @@ export function analyzeNextQueueItem() {
   }
   
   const item = state.analysisQueue[state.queueIdx];
+  latestEvalScore = 0.0;
   engineWorker.postMessage(`position fen ${item.fen}`);
   engineWorker.postMessage(`go depth ${currentDepth}`);
 }
@@ -88,9 +90,11 @@ function parseEngineLine(line) {
     
     if (scoreType === 'cp') {
       evalVal = scoreVal / 100.0;
+      latestEvalScore = evalVal;
       scoreText = (evalVal > 0 ? '+' : '') + evalVal.toFixed(2);
     } else if (scoreType === 'mate') {
       evalVal = scoreVal > 0 ? 99.0 : -99.0;
+      latestEvalScore = evalVal;
       scoreText = 'M' + Math.abs(scoreVal);
       if (scoreVal < 0) scoreText = '-M' + Math.abs(scoreVal);
     }
@@ -105,16 +109,7 @@ function parseEngineLine(line) {
   if (line.startsWith('bestmove') && isAnalyzing) {
     const parts = line.split(' ');
     const bestMove = parts[1];
-    
-    // Get evaluation text from event/dom or fallback
-    const scoreEl = document.getElementById('engine-eval-score');
-    const txt = scoreEl ? scoreEl.innerText : '0.00';
-    let finalScore = 0.0;
-    if (txt.includes('M')) {
-      finalScore = txt.startsWith('-') ? -99.0 : 99.0;
-    } else {
-      finalScore = parseFloat(txt) || 0.0;
-    }
+    const finalScore = latestEvalScore;
     
     if (!state.isSelfAnalysis) {
       if (state.analysisQueue && state.analysisQueue[state.queueIdx]) {
@@ -128,6 +123,7 @@ function parseEngineLine(line) {
       if (state.selfAnalysisHistory.length > 0 && state.selfAnalysisMoveIdx >= 0) {
         state.selfAnalysisHistory[state.selfAnalysisMoveIdx].evalScore = finalScore;
         state.selfAnalysisHistory[state.selfAnalysisMoveIdx].bestMove = bestMove;
+        analyzeSelfAnalysisMove();
       }
     }
   }
@@ -284,13 +280,78 @@ export function runSimulatedAnalysis(onProgress, onComplete) {
 export function runRealtimeEngineAnalysis() {
   if (!engineReady || !engineWorker) {
     const event = new CustomEvent('engine-info', {
-      detail: { depth: '12', scoreText: state.chess.turn() === 'w' ? '+0.40' : '-0.40', nps: 0, pv: '' }
+      detail: { depth: '20', scoreText: state.chess.turn() === 'w' ? '+0.40' : '-0.40', nps: 0, pv: '' }
     });
     window.dispatchEvent(event);
     return;
   }
   
   isAnalyzing = true;
+  latestEvalScore = 0.0;
   engineWorker.postMessage(`position fen ${state.chess.fen()}`);
-  engineWorker.postMessage('go depth 12');
+  engineWorker.postMessage('go depth 20');
+}
+
+export function analyzeSelfAnalysisMove() {
+  if (state.selfAnalysisHistory.length === 0 || state.selfAnalysisMoveIdx < 0) return;
+  
+  const moveIdx = state.selfAnalysisMoveIdx;
+  const move = state.selfAnalysisHistory[moveIdx];
+  
+  const chessAfter = new Chess(state.chess.fen());
+  const chessBefore = new Chess(state.chess.fen());
+  chessBefore.undo();
+  
+  let evalBefore = 0.15;
+  let bestMoveBefore = "";
+  
+  if (moveIdx === 0) {
+    if (state.currentMoveIdx === -1) {
+      evalBefore = 0.15;
+      bestMoveBefore = "";
+    } else {
+      evalBefore = state.reviewData.evals[state.currentMoveIdx + 1] !== undefined 
+        ? state.reviewData.evals[state.currentMoveIdx + 1] 
+        : 0.15;
+      bestMoveBefore = (state.analysisQueue && state.analysisQueue[state.currentMoveIdx])
+        ? state.analysisQueue[state.currentMoveIdx].bestMove 
+        : "";
+    }
+  } else {
+    const prevMove = state.selfAnalysisHistory[moveIdx - 1];
+    evalBefore = prevMove.evalScore !== undefined ? prevMove.evalScore : 0.15;
+    bestMoveBefore = prevMove.bestMove || "";
+  }
+  
+  const engineInfoBefore = {
+    evalScore: evalBefore,
+    bestMove: bestMoveBefore
+  };
+  
+  const engineInfoAfter = {
+    evalScore: move.evalScore !== undefined ? move.evalScore : 0.15,
+    bestMove: move.bestMove || ""
+  };
+  
+  const headers = {};
+  const features = extractFeatures(
+    chessBefore,
+    chessAfter,
+    move,
+    engineInfoBefore,
+    engineInfoAfter,
+    moveIdx + 100, // Offset to bypass book move threshold
+    headers
+  );
+  
+  const classification = classifyMove(features);
+  move.classification = classification;
+  
+  const comment = generateCoachComment(move, classification, bestMoveBefore, moveIdx, features, chessBefore);
+  move.comment = comment;
+  
+  const event = new CustomEvent('self-analysis-compiled', {
+    detail: { move, classification, comment, evalScore: move.evalScore }
+  });
+  window.dispatchEvent(event);
 }
