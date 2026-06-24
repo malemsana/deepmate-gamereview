@@ -4,8 +4,10 @@ import {
   getPieceValue, 
   countPieces, 
   generateCoachComment,
-  formatBestMoveNotation
+  formatBestMoveNotation,
+  classifyMove
 } from './classifier.js';
+import { extractFeatures, normalizeEval } from './features.js';
 
 export let engineWorker = null;
 export let engineReady = false;
@@ -136,8 +138,17 @@ function compileWorkerAnalysisResults() {
   state.reviewData.evals = [];
   state.reviewData.classifications = {};
   state.reviewData.comments = {};
+  state.reviewData.features = {};
   
-  state.reviewData.evals = state.analysisQueue.map(item => item.evalScore);
+  state.reviewData.evals = state.analysisQueue.map(item => {
+    try {
+      const tempChess = new Chess(item.fen);
+      const scoreVal = item.evalScore !== undefined ? item.evalScore : 0.3;
+      return normalizeEval(scoreVal, tempChess.turn());
+    } catch (e) {
+      return item.evalScore !== undefined ? item.evalScore : 0.3;
+    }
+  });
   
   for (let i = 0; i < state.gameHistory.length; i++) {
     const move = state.gameHistory[i];
@@ -146,91 +157,28 @@ function compileWorkerAnalysisResults() {
     const prevEval = state.reviewData.evals[i];
     const currEval = state.reviewData.evals[i + 1];
     const queueItem = state.analysisQueue[i]; 
+    const nextQueueItem = state.analysisQueue[i + 1];
     
     const prevFen = queueItem.fen;
     const positionChess = new Chess(prevFen);
-    const legalMoves = positionChess.moves({ verbose: true });
-    const isForced = (legalMoves.length === 1);
+    const nextChess = new Chess(nextQueueItem.fen);
     
-    let prevClipped = Math.max(-8, Math.min(8, prevEval));
-    let currClipped = Math.max(-8, Math.min(8, currEval));
-    let clippedLoss = 0.0;
-    if (playerColor === 'w') {
-      clippedLoss = prevClipped - currClipped;
-    } else {
-      clippedLoss = currClipped - prevClipped;
-    }
+    const headers = (state.chess && typeof state.chess.header === 'function') ? state.chess.header() : {};
+    const features = extractFeatures(
+      positionChess,
+      nextChess,
+      move,
+      queueItem,
+      nextQueueItem,
+      i,
+      headers
+    );
+    state.reviewData.features[i] = features;
     
-    const bestMoveStr = queueItem.bestMove;
-    const playedMoveStr = move.from + move.to;
-    
-    let type = "best";
-    
-    if (i < 6) {
-      type = "book";
-    } else if (isForced) {
-      type = "forced";
-    } else {
-      const wasWinning = (playerColor === 'w' && prevEval >= 2.5) || (playerColor === 'b' && prevEval <= -2.5);
-      const isStillWinning = (playerColor === 'w' && currEval >= 1.0) || (playerColor === 'b' && currEval <= -1.0);
-      
-      const wasEqualOrLosing = (playerColor === 'w' && prevEval < 2.5) || (playerColor === 'b' && prevEval > -2.5);
-      const isLost = (playerColor === 'w' && currEval < -2.0) || (playerColor === 'b' && currEval > 2.0);
-      
-      if (wasWinning && !isStillWinning && clippedLoss >= 1.5) {
-        type = "missed_win";
-      } else if (wasEqualOrLosing && isLost && clippedLoss >= 1.5) {
-        type = "missed_draw";
-      } else if (playedMoveStr === bestMoveStr) {
-        const isCapture = move.san.includes('x');
-        const pieceVal = getPieceValue(move.piece);
-        if (isCapture && pieceVal >= 3) {
-          type = "brilliant";
-        } else {
-          const totalPieces = countPieces(positionChess);
-          if (totalPieces > 16 && Math.random() < 0.2) {
-            type = "great";
-          } else {
-            type = "best";
-          }
-        }
-      } else {
-        if (clippedLoss <= 0.05) {
-          type = "best";
-        } else if (clippedLoss <= 0.15) {
-          type = "excellent";
-        } else if (clippedLoss <= 0.40) {
-          type = "good";
-        } else if (clippedLoss <= 0.90) {
-          type = "inaccuracy";
-        } else if (clippedLoss <= 2.00) {
-          let opponentBlundered = false;
-          if (i > 0) {
-            const prevMoveType = state.reviewData.classifications[i - 1];
-            opponentBlundered = (prevMoveType === 'blunder' || prevMoveType === 'mistake');
-          }
-          if (opponentBlundered && clippedLoss >= 0.8) {
-            type = "miss";
-          } else {
-            type = "mistake";
-          }
-        } else {
-          let opponentBlundered = false;
-          if (i > 0) {
-            const prevMoveType = state.reviewData.classifications[i - 1];
-            opponentBlundered = (prevMoveType === 'blunder' || prevMoveType === 'mistake');
-          }
-          if (opponentBlundered) {
-            type = "miss";
-          } else {
-            type = "blunder";
-          }
-        }
-      }
-    }
-    
+    const type = classifyMove(features);
     state.reviewData.classifications[i] = type;
-    state.reviewData.comments[i] = generateCoachComment(move, type, bestMoveStr, i);
+    const bestMoveStr = queueItem.bestMove;
+    state.reviewData.comments[i] = generateCoachComment(move, type, bestMoveStr, i, features, positionChess);
   }
   
   calculateAccuracies();

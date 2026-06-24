@@ -7,7 +7,8 @@ export const state = {
     accuracies: { white: 0, black: 0 },
     evals: [],
     classifications: {},
-    comments: {}
+    comments: {},
+    features: {}
   },
   isSelfAnalysis: false,
   selfAnalysisHistory: [],
@@ -24,7 +25,8 @@ export const state = {
       accuracies: { white: 0, black: 0 },
       evals: [],
       classifications: {},
-      comments: {}
+      comments: {},
+      features: {}
     };
     this.isSelfAnalysis = false;
     this.selfAnalysisHistory = [];
