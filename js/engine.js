@@ -38,33 +38,173 @@ export function initEngineWorker(onReady, onMessage) {
   }
 }
 
+let analysisPhase = 1; // 1: Depth 8, 2: Depth 15, 3: Depth 20
+let phaseQueue = [];   // Array of indices from state.analysisQueue to analyze
+let phaseQueueIdx = 0;
+let phaseOnProgress = null;
+let phaseOnComplete = null;
+
 // Start Stockfish Batch Analysis
 export function startEngineAnalysis(depth, onProgress, onComplete) {
   isAnalyzing = true;
-  currentDepth = depth;
-  analysisProgressCallback = onProgress;
-  analysisCompleteCallback = onComplete;
-  state.queueIdx = 0;
-  analyzeNextQueueItem();
+  phaseOnProgress = onProgress;
+  phaseOnComplete = onComplete;
+  
+  // Phase 1 Setup: Depth 8 baseline scan for all positions
+  analysisPhase = 1;
+  phaseQueue = state.analysisQueue.map((_, idx) => idx);
+  phaseQueueIdx = 0;
+  
+  // Reset all phase evaluation data on the queue
+  state.analysisQueue.forEach(item => {
+    item.eval8 = undefined;
+    item.bestMove8 = undefined;
+    item.eval15 = undefined;
+    item.bestMove15 = undefined;
+    item.eval20 = undefined;
+    item.bestMove20 = undefined;
+    item.evalScore = undefined;
+    item.bestMove = undefined;
+  });
+  
+  analyzeNextPhaseItem();
 }
 
 // Queue runner
-export function analyzeNextQueueItem() {
-  if (state.queueIdx >= state.analysisQueue.length) {
-    isAnalyzing = false;
-    compileWorkerAnalysisResults();
-    if (analysisCompleteCallback) analysisCompleteCallback();
+export function analyzeNextPhaseItem() {
+  if (phaseQueueIdx >= phaseQueue.length) {
+    transitionToNextPhase();
     return;
   }
   
-  if (analysisProgressCallback) {
-    analysisProgressCallback(state.queueIdx, state.analysisQueue.length);
+  const queueIdx = phaseQueue[phaseQueueIdx];
+  const item = state.analysisQueue[queueIdx];
+  
+  let targetDepth = 8;
+  if (analysisPhase === 2) targetDepth = 15;
+  if (analysisPhase === 3) targetDepth = 20;
+  
+  if (phaseOnProgress) {
+    phaseOnProgress(analysisPhase, phaseQueueIdx, phaseQueue.length, queueIdx);
   }
   
-  const item = state.analysisQueue[state.queueIdx];
   latestEvalScore = 0.0;
   engineWorker.postMessage(`position fen ${item.fen}`);
-  engineWorker.postMessage(`go depth ${currentDepth}`);
+  engineWorker.postMessage(`go depth ${targetDepth}`);
+}
+
+// Phase state machine transitioner
+function transitionToNextPhase() {
+  if (analysisPhase === 1) {
+    preparePhase2Queue();
+    if (phaseQueue.length > 0) {
+      analysisPhase = 2;
+      phaseQueueIdx = 0;
+      analyzeNextPhaseItem();
+    } else {
+      analysisPhase = 2;
+      transitionToNextPhase();
+    }
+  } else if (analysisPhase === 2) {
+    preparePhase3Queue();
+    if (phaseQueue.length > 0) {
+      analysisPhase = 3;
+      phaseQueueIdx = 0;
+      analyzeNextPhaseItem();
+    } else {
+      analysisPhase = 3;
+      transitionToNextPhase();
+    }
+  } else if (analysisPhase === 3) {
+    isAnalyzing = false;
+    compileFinalAnalysisResults();
+    if (phaseOnComplete) phaseOnComplete();
+  }
+}
+
+// Phase 2 Filtering: Moderate scan (Depth 15) for interesting/critical moves
+function preparePhase2Queue() {
+  const flaggedIndices = new Set();
+  
+  for (let i = 0; i < state.gameHistory.length; i++) {
+    const move = state.gameHistory[i];
+    const idxBefore = i;
+    const idxAfter = i + 1;
+    
+    const itemBefore = state.analysisQueue[idxBefore];
+    const itemAfter = state.analysisQueue[idxAfter];
+    
+    const evalBefore = itemBefore.eval8 !== undefined ? itemBefore.eval8 : 0.0;
+    const evalAfter = itemAfter.eval8 !== undefined ? itemAfter.eval8 : 0.0;
+    
+    // Calculate centipawn loss from the player's perspective at depth 8
+    let centipawnLoss = 0.0;
+    if (move.color === 'w') {
+      centipawnLoss = evalBefore - evalAfter;
+    } else {
+      centipawnLoss = evalAfter - evalBefore;
+    }
+    
+    const isMateBefore = Math.abs(evalBefore) === 99.0;
+    const isMateAfter = Math.abs(evalAfter) === 99.0;
+    
+    const isCapture = move.san.includes('x');
+    const isCheck = move.san.includes('+') || move.san.includes('#');
+    const isPromotion = move.san.includes('=');
+    const isCastle = move.san.includes('O-O');
+    
+    // Interesting moves have centipawn loss > 50cp, mates, checks, promotions, or captures
+    const isInteresting = centipawnLoss > 0.50 || isMateBefore || isMateAfter || isCapture || isCheck || isPromotion || isCastle;
+    
+    if (isInteresting) {
+      flaggedIndices.add(idxBefore);
+      flaggedIndices.add(idxAfter);
+    }
+  }
+  
+  phaseQueue = Array.from(flaggedIndices).sort((a, b) => a - b);
+}
+
+// Phase 3 Filtering: Deep scan (Depth 20) for complex, disagreement, or brilliant moves
+function preparePhase3Queue() {
+  const flaggedIndices = new Set();
+  
+  for (let i = 0; i < state.gameHistory.length; i++) {
+    const move = state.gameHistory[i];
+    const idxBefore = i;
+    const idxAfter = i + 1;
+    
+    const itemBefore = state.analysisQueue[idxBefore];
+    const itemAfter = state.analysisQueue[idxAfter];
+    
+    // We only perform deep checks if both positions were evaluated in Phase 2
+    if (itemBefore.eval15 !== undefined && itemAfter.eval15 !== undefined) {
+      // Swing check
+      const swingBefore = Math.abs(itemBefore.eval8 - itemBefore.eval15) > 3.00;
+      const swingAfter = Math.abs(itemAfter.eval8 - itemAfter.eval15) > 3.00;
+      
+      // Potential brilliant sacrifice check
+      const evalBefore15 = itemBefore.eval15;
+      const evalAfter15 = itemAfter.eval15;
+      
+      let centipawnLoss15 = 0.0;
+      if (move.color === 'w') {
+        centipawnLoss15 = evalBefore15 - evalAfter15;
+      } else {
+        centipawnLoss15 = evalAfter15 - evalBefore15;
+      }
+      
+      const isCapture = move.san.includes('x');
+      const isSacrificeCandidate = isCapture && (centipawnLoss15 < 0.20);
+      
+      if (swingBefore || swingAfter || isSacrificeCandidate) {
+        flaggedIndices.add(idxBefore);
+        flaggedIndices.add(idxAfter);
+      }
+    }
+  }
+  
+  phaseQueue = Array.from(flaggedIndices).sort((a, b) => a - b);
 }
 
 // UCI stdout parser
@@ -112,12 +252,24 @@ function parseEngineLine(line) {
     const finalScore = latestEvalScore;
     
     if (!state.isSelfAnalysis) {
-      if (state.analysisQueue && state.analysisQueue[state.queueIdx]) {
-        state.analysisQueue[state.queueIdx].evalScore = finalScore;
-        state.analysisQueue[state.queueIdx].bestMove = bestMove;
+      const queueIdx = phaseQueue[phaseQueueIdx];
+      const item = state.analysisQueue[queueIdx];
+      
+      if (item) {
+        if (analysisPhase === 1) {
+          item.eval8 = finalScore;
+          item.bestMove8 = bestMove;
+        } else if (analysisPhase === 2) {
+          item.eval15 = finalScore;
+          item.bestMove15 = bestMove;
+        } else if (analysisPhase === 3) {
+          item.eval20 = finalScore;
+          item.bestMove20 = bestMove;
+        }
       }
-      state.queueIdx++;
-      analyzeNextQueueItem();
+      
+      phaseQueueIdx++;
+      analyzeNextPhaseItem();
     } else {
       isAnalyzing = false;
       if (state.selfAnalysisHistory.length > 0 && state.selfAnalysisMoveIdx >= 0) {
@@ -129,12 +281,26 @@ function parseEngineLine(line) {
   }
 }
 
-// Compile Stockfish Results
-function compileWorkerAnalysisResults() {
+// Compile final hybrid results
+function compileFinalAnalysisResults() {
   state.reviewData.evals = [];
   state.reviewData.classifications = {};
   state.reviewData.comments = {};
   state.reviewData.features = {};
+  
+  // Hierarchical merge
+  state.analysisQueue.forEach(item => {
+    if (item.eval20 !== undefined) {
+      item.evalScore = item.eval20;
+      item.bestMove = item.bestMove20;
+    } else if (item.eval15 !== undefined) {
+      item.evalScore = item.eval15;
+      item.bestMove = item.bestMove15;
+    } else {
+      item.evalScore = item.eval8 !== undefined ? item.eval8 : 0.3;
+      item.bestMove = item.bestMove8 || "";
+    }
+  });
   
   state.reviewData.evals = state.analysisQueue.map(item => {
     try {
@@ -148,10 +314,6 @@ function compileWorkerAnalysisResults() {
   
   for (let i = 0; i < state.gameHistory.length; i++) {
     const move = state.gameHistory[i];
-    const playerColor = move.color;
-    
-    const prevEval = state.reviewData.evals[i];
-    const currEval = state.reviewData.evals[i + 1];
     const queueItem = state.analysisQueue[i]; 
     const nextQueueItem = state.analysisQueue[i + 1];
     

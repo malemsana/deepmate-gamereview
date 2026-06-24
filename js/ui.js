@@ -514,10 +514,19 @@ function handleStartAnalysis() {
     if (engineReady && engineWorker) {
       startEngineAnalysis(
         20,
-        (current, total) => {
+        (phase, current, total, globalIdx) => {
           const progressPercent = Math.round((current / total) * 100);
           loadingProgressFill.style.width = `${progressPercent}%`;
-          loadingStatusText.innerText = `Engine analyzing move ${current} of ${total - 1}...`;
+          
+          let phaseText = "";
+          if (phase === 1) {
+            phaseText = `Phase 1: Baseline Scan (Position ${current} of ${total - 1})`;
+          } else if (phase === 2) {
+            phaseText = `Phase 2: Analyzing Critical Positions (Move ${current + 1} of ${total})`;
+          } else if (phase === 3) {
+            phaseText = `Phase 3: Deep Resolution (Move ${current + 1} of ${total})`;
+          }
+          loadingStatusText.innerText = phaseText;
         },
         () => {
           loadingOverlay.style.display = 'none';
