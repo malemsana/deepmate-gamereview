@@ -1,17 +1,30 @@
 import { state } from './state.js';
 import { PIECE_IMAGES } from './config.js';
 import { runRealtimeEngineAnalysis } from './engine.js';
-import { insertSelfAnalysisIndicator, renderSelfAnalysisMovesList } from './ui.js';
+import { insertSelfAnalysisIndicator, renderSelfAnalysisMovesList, playMoveSound } from './ui.js';
+import { clearArrows, drawMoveArrow } from './arrows.js';
 
 let draggedPiece = null;
 let dragSourceSquare = null;
 let selectedSquare = null;
+let rightClickStartSquare = null;
 
 // Initialize Board Squares
 export function initBoard() {
   const boardEl = document.getElementById('board');
   if (!boardEl) return;
   boardEl.innerHTML = '';
+  
+  // Prevent contextmenu on the entire board to allow custom right-clicks
+  boardEl.addEventListener('contextmenu', (e) => e.preventDefault());
+  boardEl.addEventListener('mouseleave', () => {
+    rightClickStartSquare = null;
+  });
+  boardEl.addEventListener('mousedown', (e) => {
+    if (e.button === 0) {
+      clearArrows();
+    }
+  });
   
   for (let rank = 8; rank >= 1; rank--) {
     for (let file = 1; file <= 8; file++) {
@@ -41,6 +54,24 @@ export function initBoard() {
       squareEl.addEventListener('click', () => handleSquareClick(squareName));
       squareEl.addEventListener('dragover', (e) => e.preventDefault());
       squareEl.addEventListener('drop', () => handleSquareDrop(squareName));
+      
+      // Right-click drag event listeners for manual arrows
+      squareEl.addEventListener('contextmenu', (e) => e.preventDefault());
+      squareEl.addEventListener('mousedown', (e) => {
+        if (e.button === 2) {
+          e.preventDefault();
+          rightClickStartSquare = squareName;
+        }
+      });
+      squareEl.addEventListener('mouseup', (e) => {
+        if (e.button === 2) {
+          e.preventDefault();
+          if (rightClickStartSquare && rightClickStartSquare !== squareName) {
+            drawMoveArrow(rightClickStartSquare, squareName, true); // true = isManual
+          }
+          rightClickStartSquare = null;
+        }
+      });
       
       boardEl.appendChild(squareEl);
     }
@@ -80,6 +111,7 @@ export function updateBoardDisplay() {
           pieceWrapper.addEventListener('dragstart', (e) => {
             draggedPiece = pieceWrapper;
             dragSourceSquare = squareName;
+            clearArrows();
             highlightLegalMoves(squareName);
           });
           
@@ -173,6 +205,7 @@ export function handleSquareClick(squareName) {
     const sideToMove = state.chess.turn();
     
     if (pieceColor === sideToMove) {
+      clearArrows();
       selectedSquare = squareName;
       squareEl.classList.add('selected-highlight');
       highlightLegalMoves(squareName);
@@ -219,6 +252,9 @@ export function executePlayerMove(from, to) {
     updateBoardDisplay();
     renderSelfAnalysisMovesList();
     runRealtimeEngineAnalysis();
+    
+    const isCheck = state.chess.in_check();
+    playMoveSound(isCheck);
   }
 }
 

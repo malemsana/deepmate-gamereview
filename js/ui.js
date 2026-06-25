@@ -14,6 +14,7 @@ import {
   handleGraphClick, 
   updateGraphCursorPosition 
 } from './graph.js';
+import { drawMoveArrow, clearArrows } from './arrows.js';
 
 let autoplayInterval = null;
 
@@ -218,6 +219,14 @@ function setupEventListeners() {
     
     // Re-draw board badges
     updateBoardDisplay();
+    
+    // Draw suggestion arrow for the best move in variations mode
+    clearArrows();
+    if (move.bestMove && move.bestMove.length >= 4) {
+      const from = move.bestMove.slice(0, 2);
+      const to = move.bestMove.slice(2, 4);
+      drawMoveArrow(from, to);
+    }
   });
 }
 
@@ -310,6 +319,26 @@ export function jumpToMove(idx) {
   
   updateBoardDisplay();
   updateGraphCursorPosition();
+  
+  if (idx >= 0) {
+    const move = state.gameHistory[idx];
+    const isCheck = move && (move.san.includes('+') || move.san.includes('#'));
+    playMoveSound(isCheck);
+  }
+  
+  clearArrows();
+  if (idx >= 0) {
+    const type = state.reviewData.classifications[idx];
+    const subOptimalTypes = ['inaccuracy', 'mistake', 'blunder', 'miss', 'missed_win', 'missed_draw'];
+    if (type && subOptimalTypes.includes(type)) {
+      const queueItem = state.analysisQueue[idx];
+      if (queueItem && queueItem.bestMove && queueItem.bestMove.length >= 4) {
+        const from = queueItem.bestMove.slice(0, 2);
+        const to = queueItem.bestMove.slice(2, 4);
+        drawMoveArrow(from, to);
+      }
+    }
+  }
   
   document.querySelectorAll('.move-cell').forEach(c => {
     c.classList.remove('active-move');
@@ -679,4 +708,21 @@ export function insertSelfAnalysisIndicator() {
 export function renderSelfAnalysisMovesList() {
   document.querySelectorAll('.move-cell').forEach(c => c.classList.remove('active-move'));
   coachExplanation.innerHTML = `Exploring variation line: <strong style="color:var(--primary);">${state.selfAnalysisHistory.map(m=>m.san).join(' → ')}</strong>. Click Resume to return.`;
+}
+
+// Play move and check sound effects
+export function playMoveSound(isCheck) {
+  try {
+    let audioPath;
+    if (isCheck) {
+      audioPath = 'assets/sfx/sfx_check.mp3';
+    } else {
+      const rand = Math.random() < 0.5 ? '1' : '2';
+      audioPath = `assets/sfx/sfx_piecemove_${rand}.mp3`;
+    }
+    const audio = new Audio(audioPath);
+    audio.play().catch(e => console.log("Audio play blocked/failed:", e));
+  } catch (err) {
+    console.warn("Failed to play move sound:", err);
+  }
 }

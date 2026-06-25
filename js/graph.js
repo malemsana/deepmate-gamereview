@@ -10,10 +10,24 @@ export function drawEvaluationGraph() {
   if (!graphContainer || !graphLine || !graphFill) return;
   if (state.reviewData.evals.length === 0) return;
   
+  // Remove existing graph dots
+  const existingDots = graphContainer.querySelectorAll('.graph-dot');
+  existingDots.forEach(d => d.remove());
+  
   const width = graphContainer.clientWidth;
   const height = 45;
   const points = [];
   const totalMoves = state.reviewData.evals.length;
+  
+  const dotColors = {
+    brilliant: 'var(--color-brilliant)',
+    great: 'var(--color-great)',
+    inaccuracy: 'var(--color-inaccuracy)',
+    mistake: 'var(--color-mistake)',
+    blunder: 'var(--color-blunder)',
+    miss: 'var(--color-miss)',
+    missed_win: 'var(--color-missed-win)'
+  };
   
   for (let i = 0; i < totalMoves; i++) {
     const score = state.reviewData.evals[i];
@@ -25,6 +39,35 @@ export function drawEvaluationGraph() {
     
     const y = height - (percent * (height - 10) + 5);
     points.push({ x, y, idx: i - 1 });
+    
+    // Add dot for key moves (skip starting position which is index 0 in evals)
+    if (i > 0) {
+      const moveIdx = i - 1;
+      const classification = state.reviewData.classifications[moveIdx];
+      if (classification && dotColors[classification]) {
+        const dot = document.createElement('div');
+        dot.className = 'graph-dot';
+        dot.style.position = 'absolute';
+        dot.style.left = `${x}px`;
+        dot.style.top = `${y}px`;
+        dot.style.width = '7px';
+        dot.style.height = '7px';
+        dot.style.borderRadius = '50%';
+        dot.style.backgroundColor = dotColors[classification];
+        dot.style.border = '1.5px solid #ffffff';
+        dot.style.transform = 'translate(-50%, -50%)';
+        dot.style.cursor = 'pointer';
+        dot.style.zIndex = '10';
+        dot.title = `Move ${Math.floor(moveIdx / 2) + 1}: ${classification.replace('_', ' ')}`;
+        
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          jumpToMove(moveIdx);
+        });
+        
+        graphContainer.appendChild(dot);
+      }
+    }
   }
   
   let pathD = `M ${points[0].x} ${points[0].y}`;
@@ -33,7 +76,13 @@ export function drawEvaluationGraph() {
   }
   
   graphLine.setAttribute('d', pathD);
-  let fillD = pathD + ` L ${points[points.length - 1].x} 20 L ${points[0].x} 20 Z`;
+  
+  // Fill everything ABOVE the curve with dark grey/black
+  let fillD = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    fillD += ` L ${points[i].x} ${points[i].y}`;
+  }
+  fillD += ` L ${width} 0 L 0 0 Z`;
   graphFill.setAttribute('d', fillD);
 }
 

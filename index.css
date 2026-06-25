@@ -394,6 +394,16 @@ body {
     flex-shrink: 0;
 }
 
+#board-arrows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
 .chessboard {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
@@ -985,7 +995,7 @@ body {
     position: relative;
     width: 100%;
     height: 45px;
-    background: var(--bg-surface-2);
+    background: #ffffff;
     border-radius: 3px;
     border: 1px solid var(--border-color);
     overflow: hidden;
@@ -997,17 +1007,17 @@ body {
 }
 
 .graph-midline {
-    stroke: var(--border-color);
+    stroke: #d0d0d0;
     stroke-width: 1;
 }
 
 .graph-fill {
-    fill: var(--primary);
-    opacity: 0.05;
+    fill: #262421;
+    opacity: 1;
 }
 
 .graph-line {
-    stroke: var(--primary);
+    stroke: #3d3a37;
     stroke-width: 1.5;
     fill: none;
 }
@@ -1022,6 +1032,14 @@ body {
     stroke-width: 1.2;
     opacity: 0.4;
     display: none;
+}
+
+.graph-dot {
+    transition: transform 0.1s ease;
+}
+.graph-dot:hover {
+    transform: translate(-50%, -50%) scale(1.35) !important;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
 }
 
 /* Footer Control Tiles */
