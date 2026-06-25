@@ -13,27 +13,125 @@ export let engineWorker = null;
 export let engineReady = false;
 export let isAnalyzing = false;
 
+export let isMultiThreaded = false;
+
 let latestEvalScore = 0.0;
 let analysisProgressCallback = null;
 let analysisCompleteCallback = null;
 let currentDepth = 20;
 
-// Initialize Stockfish WASM Web Worker
-export function initEngineWorker(onReady, onMessage) {
+// Diagnostics tracking
+let analysisStartTime = 0;
+let itemStartTime = 0;
+let phase1Times = [];
+let phase2Times = [];
+let phase3Times = [];
+
+// Helper to create and setup a worker instance
+function createWorker(workerFile, onReadyCallback, onMessageCallback) {
   try {
-    engineWorker = new Worker('js/stockfish/stockfish-18-lite-single.js');
+    const worker = new Worker(workerFile);
     
-    engineWorker.onmessage = function(e) {
+    worker.onmessage = function(e) {
       const line = e.data;
       parseEngineLine(line);
-      if (onMessage) onMessage(line);
+      
+      if (line === 'readyok') {
+        if (onReadyCallback) onReadyCallback();
+      }
+      
+      if (onMessageCallback) onMessageCallback(line);
     };
     
-    engineWorker.postMessage('uci');
-    engineWorker.postMessage('setoption name Hash value 32');
-    engineWorker.postMessage('isready');
+    worker.postMessage('uci');
+    worker.postMessage('setoption name Hash value 32');
+    
+    // Set multi-threaded option if loading the multi-threaded worker file
+    if (workerFile.includes('stockfish-18-lite.js') && !workerFile.includes('single')) {
+      const threadsCount = Math.max(1, Math.min(4, navigator.hardwareConcurrency || 2));
+      worker.postMessage(`setoption name Threads value ${threadsCount}`);
+      console.log(`Setting multi-threaded Stockfish Threads value to: ${threadsCount}`);
+    }
+    
+    worker.postMessage('isready');
+    
+    return worker;
   } catch (err) {
-    console.warn("Stockfish worker failed. Falling back to heuristic reviews.", err);
+    console.error(`Failed to instantiate worker (${workerFile}):`, err);
+    return null;
+  }
+}
+
+// Initialize Stockfish WASM Web Worker
+export function initEngineWorker(onReady, onMessage) {
+  const supportsThreads = typeof SharedArrayBuffer === 'function' && window.crossOriginIsolated === true;
+  
+  if (supportsThreads) {
+    console.log("Environment supports SharedArrayBuffer & cross-origin isolation. Attempting multi-threaded Stockfish...");
+    let failed = false;
+    let timeoutId = null;
+    
+    const worker = createWorker(
+      'js/stockfish/stockfish-18-lite.js',
+      () => {
+        if (failed) return;
+        console.log("Multi-threaded Stockfish successfully loaded and ready.");
+        clearTimeout(timeoutId);
+        isMultiThreaded = true;
+        engineWorker = worker;
+        engineReady = true;
+        if (onReady) onReady();
+      },
+      (line) => {
+        if (failed) return;
+        if (onMessage) onMessage(line);
+      }
+    );
+    
+    if (worker) {
+      worker.onerror = function(err) {
+        if (failed) return;
+        console.warn("Multi-threaded Stockfish worker failed on startup. Falling back to single-threaded:", err);
+        failed = true;
+        clearTimeout(timeoutId);
+        try { worker.terminate(); } catch(e) {}
+        fallbackToSingleThread(onReady, onMessage);
+      };
+      
+      timeoutId = setTimeout(() => {
+        if (failed) return;
+        console.warn("Multi-threaded Stockfish startup timed out (1.5s). Falling back to single-threaded.");
+        failed = true;
+        try { worker.terminate(); } catch(e) {}
+        fallbackToSingleThread(onReady, onMessage);
+      }, 1500);
+    } else {
+      fallbackToSingleThread(onReady, onMessage);
+    }
+  } else {
+    console.log("Environment does not support multi-threaded WASM. Using single-threaded Stockfish...");
+    fallbackToSingleThread(onReady, onMessage);
+  }
+}
+
+function fallbackToSingleThread(onReady, onMessage) {
+  isMultiThreaded = false;
+  engineReady = false;
+  const worker = createWorker(
+    'js/stockfish/stockfish-18-lite-single.js',
+    () => {
+      console.log("Fallback single-threaded Stockfish ready.");
+      engineWorker = worker;
+      engineReady = true;
+      if (onReady) onReady();
+    },
+    onMessage
+  );
+  
+  if (worker) {
+    engineWorker = worker;
+  } else {
+    console.error("Failed to initialize fallback single-threaded Stockfish worker.");
     engineReady = false;
   }
 }
@@ -49,6 +147,12 @@ export function startEngineAnalysis(depth, onProgress, onComplete) {
   isAnalyzing = true;
   phaseOnProgress = onProgress;
   phaseOnComplete = onComplete;
+  
+  console.log(`[Engine] Starting analysis run. Mode: ${isMultiThreaded ? 'MULTI-THREADED' : 'SINGLE-THREADED'}`);
+  analysisStartTime = performance.now();
+  phase1Times = [];
+  phase2Times = [];
+  phase3Times = [];
   
   // Phase 1 Setup: Depth 8 baseline scan for all positions
   analysisPhase = 1;
@@ -89,6 +193,7 @@ export function analyzeNextPhaseItem() {
   }
   
   latestEvalScore = 0.0;
+  itemStartTime = performance.now();
   engineWorker.postMessage(`position fen ${item.fen}`);
   engineWorker.postMessage(`go depth ${targetDepth}`);
 }
@@ -118,8 +223,24 @@ function transitionToNextPhase() {
   } else if (analysisPhase === 3) {
     isAnalyzing = false;
     compileFinalAnalysisResults();
+    printAnalysisDiagnostics();
     if (phaseOnComplete) phaseOnComplete();
   }
+}
+
+function printAnalysisDiagnostics() {
+  const totalRuntime = performance.now() - analysisStartTime;
+  
+  const sum = arr => arr.reduce((a, b) => a + b, 0);
+  const avg = arr => arr.length > 0 ? (sum(arr) / arr.length).toFixed(1) : '0.0';
+  
+  console.log("=== ENGINE ANALYSIS DIAGNOSTICS ===");
+  console.log(`Currently running: ${isMultiThreaded ? 'MULTI-THREADED' : 'SINGLE-THREADED'}`);
+  console.log(`Total Runtime: ${(totalRuntime / 1000).toFixed(2)} seconds`);
+  console.log(`Tier 1 (Depth 8)  - Moves Analyzed: ${phase1Times.length}, Avg Time: ${avg(phase1Times)} ms, Total Time: ${sum(phase1Times).toFixed(0)} ms`);
+  console.log(`Tier 2 (Depth 15) - Moves Analyzed: ${phase2Times.length}, Avg Time: ${avg(phase2Times)} ms, Total Time: ${sum(phase2Times).toFixed(0)} ms`);
+  console.log(`Tier 3 (Depth 20) - Moves Analyzed: ${phase3Times.length}, Avg Time: ${avg(phase3Times)} ms, Total Time: ${sum(phase3Times).toFixed(0)} ms`);
+  console.log("====================================");
 }
 
 // Phase 2 Filtering: Moderate scan (Depth 15) for interesting/critical moves
@@ -254,6 +375,11 @@ function parseEngineLine(line) {
     if (!state.isSelfAnalysis) {
       const queueIdx = phaseQueue[phaseQueueIdx];
       const item = state.analysisQueue[queueIdx];
+      
+      const duration = performance.now() - itemStartTime;
+      if (analysisPhase === 1) phase1Times.push(duration);
+      else if (analysisPhase === 2) phase2Times.push(duration);
+      else if (analysisPhase === 3) phase3Times.push(duration);
       
       if (item) {
         if (analysisPhase === 1) {
