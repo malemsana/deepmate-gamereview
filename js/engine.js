@@ -15,6 +15,9 @@ export let isAnalyzing = false;
 
 export let isMultiThreaded = false;
 
+// Tier 3 (Depth 20) configuration flag
+export const ENABLE_TIER_3 = false;
+
 let latestEvalScore = 0.0;
 let analysisProgressCallback = null;
 let analysisCompleteCallback = null;
@@ -211,11 +214,16 @@ function transitionToNextPhase() {
       transitionToNextPhase();
     }
   } else if (analysisPhase === 2) {
-    preparePhase3Queue();
-    if (phaseQueue.length > 0) {
-      analysisPhase = 3;
-      phaseQueueIdx = 0;
-      analyzeNextPhaseItem();
+    if (ENABLE_TIER_3) {
+      preparePhase3Queue();
+      if (phaseQueue.length > 0) {
+        analysisPhase = 3;
+        phaseQueueIdx = 0;
+        analyzeNextPhaseItem();
+      } else {
+        analysisPhase = 3;
+        transitionToNextPhase();
+      }
     } else {
       analysisPhase = 3;
       transitionToNextPhase();
