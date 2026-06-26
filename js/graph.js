@@ -77,12 +77,12 @@ export function drawEvaluationGraph() {
   
   graphLine.setAttribute('d', pathD);
   
-  // Fill everything ABOVE the curve with dark grey/black
+  // Fill everything BELOW the curve with light color
   let fillD = `M ${points[0].x} ${points[0].y}`;
   for (let i = 1; i < points.length; i++) {
     fillD += ` L ${points[i].x} ${points[i].y}`;
   }
-  fillD += ` L ${width} 0 L 0 0 Z`;
+  fillD += ` L ${width} ${height} L 0 ${height} Z`;
   graphFill.setAttribute('d', fillD);
 }
 
@@ -96,6 +96,7 @@ export function handleGraphHover(e) {
   const hoverX = e.clientX - rect.left;
   const width = rect.width;
   const totalMoves = state.reviewData.evals.length;
+  if (totalMoves <= 1) return;
   
   const moveIdx = Math.round((hoverX / width) * (totalMoves - 1)) - 1;
   const clampedIdx = Math.max(-1, Math.min(state.gameHistory.length - 1, moveIdx));
@@ -104,6 +105,69 @@ export function handleGraphHover(e) {
   graphHoverCursor.setAttribute('x1', cursorX);
   graphHoverCursor.setAttribute('x2', cursorX);
   graphHoverCursor.style.display = 'block';
+
+  // Hover Tooltip logic
+  const tooltip = document.getElementById('graph-tooltip');
+  if (tooltip) {
+    const parentRect = graphSvg.parentElement.getBoundingClientRect();
+    const tooltipX = e.clientX - parentRect.left + 10;
+    
+    // Position tooltip checking limits
+    tooltip.style.left = `${Math.min(tooltipX, parentRect.width - 130)}px`;
+    tooltip.style.display = 'flex';
+    
+    const tooltipTitle = document.getElementById('tooltip-move-title');
+    const tooltipBadge = document.getElementById('tooltip-move-badge');
+    const tooltipEval = document.getElementById('tooltip-move-eval');
+    
+    if (clampedIdx === -1) {
+      if (tooltipTitle) tooltipTitle.innerText = "Start";
+      if (tooltipBadge) tooltipBadge.style.display = 'none';
+      if (tooltipEval) tooltipEval.innerText = "0.0";
+    } else {
+      const move = state.gameHistory[clampedIdx];
+      const classification = state.reviewData.classifications[clampedIdx] || 'best';
+      const scoreVal = state.reviewData.evals[clampedIdx + 1];
+      
+      if (tooltipTitle) {
+        tooltipTitle.innerText = `Move ${Math.floor(clampedIdx / 2) + 1}${clampedIdx % 2 === 0 ? 'w' : 'b'}: ${move.san}`;
+      }
+      if (tooltipBadge) {
+        tooltipBadge.innerText = classification.replace('_', ' ').toUpperCase();
+        tooltipBadge.style.display = 'inline-block';
+        
+        const badgeColors = {
+          brilliant: 'var(--color-brilliant)',
+          great: 'var(--color-great)',
+          best: 'var(--color-best)',
+          excellent: 'var(--color-excellent)',
+          good: 'var(--color-good)',
+          book: 'var(--color-book)',
+          forced: 'var(--color-forced)',
+          inaccuracy: 'var(--color-inaccuracy)',
+          mistake: 'var(--color-mistake)',
+          blunder: 'var(--color-blunder)',
+          miss: 'var(--color-miss)',
+          missed_win: 'var(--color-missed-win)',
+          missed_draw: 'var(--color-missed-draw)'
+        };
+        tooltipBadge.style.backgroundColor = badgeColors[classification] || 'var(--primary)';
+        
+        const darkTextBadges = ['brilliant', 'excellent', 'good', 'inaccuracy', 'mistake', 'miss', 'missed_draw'];
+        tooltipBadge.style.color = darkTextBadges.includes(classification) ? '#0f1412' : '#ffffff';
+      }
+      
+      if (tooltipEval) {
+        let scoreText = scoreVal > 0 ? '+' : '';
+        if (Math.abs(scoreVal) === 99.0) {
+          scoreText = scoreVal > 0 ? 'M' : '-M';
+        } else {
+          scoreText += scoreVal.toFixed(2);
+        }
+        tooltipEval.innerText = scoreText;
+      }
+    }
+  }
 }
 
 // Graph Click Navigation

@@ -19,76 +19,162 @@
 </head>
 <body>
 
-    <!-- Header / Nav -->
-    <header class="app-header">
-        <div class="logo" id="header-logo">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-                <path d="M19 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2zM5 4v16h14V4H5zm6 4h2v2h-2V8zm0 4h2v4h-2v-4z"/>
-            </svg>
-            DeepMate Review
-        </div>
-        <div class="header-actions">
-            <button class="btn btn-secondary" id="nav-home-btn" style="display: none;">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    <div class="app-layout">
+        <!-- Left Sidebar Navigation -->
+        <aside class="left-nav-sidebar">
+            <div class="brand" id="header-logo">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                    <path d="M19 22H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2zM5 4v16h14V4H5zm6 4h2v2h-2V8zm0 4h2v4h-2v-4z"/>
                 </svg>
-                Upload PGN
-            </button>
-        </div>
-    </header>
+                <span class="brand-text">DeepMate</span>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" id="nav-home-btn" title="Home">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    <span class="nav-text">Home</span>
+                </button>
+                <button class="nav-item" id="nav-upload-btn" title="Upload PGN">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                    </svg>
+                    <span class="nav-text">Upload PGN</span>
+                </button>
+                <button class="nav-item" id="nav-btn-review" title="Game Review" disabled>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    <span class="nav-text">Game Review</span>
+                </button>
+            </nav>
+            <div class="nav-footer">
+                <button class="nav-item" id="nav-btn-flip" title="Flip Board">
+                    <span class="nav-icon-text" id="flip-icon">🔄</span>
+                    <span class="nav-text">Flip Board</span>
+                </button>
+                <button class="nav-item" id="nav-btn-sound" title="Toggle Sound">
+                    <span class="nav-icon-text" id="sound-icon">🔊</span>
+                    <span class="nav-text" id="sound-text">Sound: On</span>
+                </button>
+                <div class="profile-avatar">
+                    <div class="avatar-circle" id="sidebar-avatar-circle">U</div>
+                    <img src="" id="sidebar-avatar-img" class="sidebar-avatar-photo" style="display: none;" alt="User profile photo" />
+                    <div class="profile-info">
+                        <div class="profile-name-row-sidebar" style="display: flex; align-items: center; gap: 0.35rem;">
+                            <div class="profile-name" id="sidebar-profile-name">Guest User</div>
+                            <button id="sidebar-disconnect-btn" class="sidebar-disconnect-btn" style="display: none; background: none; border: none; color: var(--color-blunder); cursor: pointer; font-size: 0.7rem; font-weight: bold; padding: 0.1rem 0.2rem; opacity: 0.7; transition: opacity 0.15s;" title="Disconnect Account">✖</button>
+                        </div>
+                        <div class="profile-status" id="sidebar-profile-status">Premium</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
 
-    <!-- Landing View -->
+        <!-- Main Content Area -->
+        <div class="main-content">
+
+            <!-- Landing View -->
     <main class="landing-container" id="landing-screen">
         <section class="hero-section">
-            <h1>Independent <span>Game Review</span> Clone</h1>
-            <p>Paste a chess PGN to get accuracy metrics, a move classification analysis, and virtual coach feedback styled like Chess.com.</p>
+            <h1>DeepMate <span>Game Review</span></h1>
+            <p>Connect your Chess.com account to review your games instantly.</p>
         </section>
 
-        <section class="dashboard-grid">
-            <!-- PGN Input -->
-            <div class="pgn-input-panel panel-card">
+        <!-- Chess.com Connect Card -->
+        <section class="chesscom-connect-card panel-card" id="chesscom-connect-card">
+            <div class="connect-header-wrap">
                 <h2 class="panel-title">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                     </svg>
-                    Paste Game PGN
+                    Link Chess.com Account (Recommended)
                 </h2>
-                <div class="pgn-textarea-wrapper">
-                    <textarea class="pgn-textarea" id="pgn-input" placeholder="Paste PGN here... e.g.
+                <p class="connect-desc">Enter your public Chess.com username to view and analyze your recent games with a single click.</p>
+            </div>
+            <div class="connect-action-container" id="connect-action-wrap">
+                <input type="text" id="chesscom-username-input" class="chesscom-username-input" placeholder="Enter Chess.com Username" />
+                <button class="btn btn-primary" id="chesscom-connect-btn">Connect Account</button>
+            </div>
+            <div class="connect-profile-status" id="connect-profile-wrap" style="display: none;">
+                <div class="profile-card-details">
+                    <img src="" id="chesscom-profile-avatar" class="profile-avatar-large" alt="Profile avatar" />
+                    <div class="profile-meta-large">
+                        <div class="profile-name-row">
+                            <span class="profile-username-large" id="chesscom-profile-username">username</span>
+                            <span class="badge-title" id="chesscom-profile-title" style="display: none;">GM</span>
+                        </div>
+                        <span class="profile-realname" id="chesscom-profile-realname">Real Name</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="chesscom-disconnect-btn">Disconnect</button>
+            </div>
+        </section>
+
+        <!-- Dashboard Single Layout -->
+        <section class="dashboard-grid" id="dashboard-grid-section">
+            <!-- Chess.com Recent Games Panel (Visible when connected) -->
+            <div class="recent-games-panel panel-card" id="chesscom-recent-panel" style="display: none; margin: 0 auto; width: 100%;">
+                <div class="recent-games-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; border-bottom: 1.5px solid var(--border-color); padding-bottom: 0.5rem;">
+                    <h2 class="panel-title" style="margin: 0; font-size: 1.05rem;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                        </svg>
+                        Recent Games on Chess.com
+                    </h2>
+                    <!-- Detailed / Compact switches -->
+                    <div class="layout-toggle-buttons" style="display: flex; gap: 0.25rem;">
+                        <button class="layout-toggle-btn active" id="layout-detailed-btn" title="Detailed Grid View">☰</button>
+                        <button class="layout-toggle-btn" id="layout-compact-btn" title="Compact List View">☷</button>
+                    </div>
+                </div>
+                <div class="featured-game-card" id="featured-game-card">
+                    <!-- Featured game generated dynamically -->
+                </div>
+                <div class="recent-games-list" id="recent-games-list">
+                    <!-- List of recent games generated dynamically -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Upload PGN Screen -->
+    <main class="landing-container" id="upload-screen" style="display: none;">
+        <section class="hero-section">
+            <h1>Upload <span>Chess Game</span></h1>
+            <p>Paste a chess game PGN text or drag and drop a .pgn file to start Stockfish analysis.</p>
+        </section>
+        
+        <div class="upload-grid-wrapper" style="max-width: 650px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Drop PGN Zone -->
+            <div class="pgn-dropzone panel-card" id="pgn-drop-zone" style="background: rgba(255,255,255,0.015); border: 2px dashed rgba(29, 186, 116, 0.25); border-radius: 8px; cursor: pointer; transition: all 0.2s ease;">
+                <div class="dropzone-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1.5rem; text-align: center;">
+                    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="var(--primary)" stroke-width="2" style="margin-bottom: 0.75rem;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--text-primary);">Upload PGN File</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary);">Drag and drop your .pgn file here or click to browse</p>
+                    <input type="file" id="pgn-file-input" style="display: none;" accept=".pgn" />
+                </div>
+            </div>
+
+            <!-- Paste PGN -->
+            <div class="pgn-input-panel panel-card" style="border: 1px solid var(--border-color); padding: 1.5rem; background: rgba(255,255,255,0.015); border-radius: 8px;">
+                <div class="pgn-textarea-wrapper" style="border: none; padding: 0;">
+                    <textarea class="pgn-textarea" id="pgn-input" style="height: 180px; width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); font-family: monospace; font-size: 0.85rem; resize: vertical;" placeholder="Paste PGN here... e.g.
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. Ng5 d5 5. exd5 Na5 ..."></textarea>
                 </div>
-                <button class="btn btn-primary" id="start-analysis-btn">
-                    Analyze Game
+                <button class="btn btn-primary" id="start-analysis-btn" style="width: 100%; margin-top: 1.25rem; padding: 0.75rem; font-weight: 700; font-size: 0.9rem;">
+                    Start Engine Analysis
                 </button>
             </div>
-
-            <!-- Demo Games Selection -->
-            <div class="demo-selection-panel panel-card">
-                <h2 class="panel-title">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
-                    Showcase Reviews
-                </h2>
-                <div class="demo-card-list">
-                    <div class="demo-card" data-game-idx="0">
-                        <div class="demo-card-header">
-                            <span class="demo-title">Kasparov vs. Topalov (1999)</span>
-                            <span class="demo-tag">Masterpiece</span>
-                        </div>
-                        <div class="demo-desc">Kasparov's legendary double rook sacrifice at Wijk aan Zee. Features brilliant sacrifices and a king hunt.</div>
-                    </div>
-                    <div class="demo-card" data-game-idx="1">
-                        <div class="demo-card-header">
-                            <span class="demo-title">DeepMate Blunder Demo</span>
-                            <span class="demo-tag">Badges Show</span>
-                        </div>
-                        <div class="demo-desc">A short game showcasing mistakes, misses, blunders, and a brilliant recovery.</div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        </div>
     </main>
 
     <!-- Workspace View (Chess.com Inspired Layout) -->
@@ -141,7 +227,7 @@
             </div>
         </div>
 
-        <!-- Right Side: Game Review Tabbed Sidepanel -->
+        <!-- Right Side: Game Review Sidepanel -->
         <div class="sidebar-column">
             <div class="workspace-sidebar">
                 
@@ -153,212 +239,278 @@
                             <polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
                     </button>
-                    <div class="review-header-title">
-                        <span class="review-green-badge">★</span> Game Review
+                    <div class="review-header-title" id="sidebar-title">
+                        Game Review
                     </div>
-                    <div class="header-tools">
-                        <span class="icon-tool" title="Toggle Sound">🔊</span>
-                        <span class="icon-tool" title="Analysis Mode">🔍</span>
-                    </div>
+                    <button class="btn btn-secondary btn-header-action" id="btn-show-report" style="display: none;">Report Card</button>
                 </div>
 
                 <!-- Main Review View Area -->
                 <div class="review-scroll-container">
                     
-                    <!-- Coach explanation speech card -->
-                    <div class="coach-container">
-                        <div class="coach-avatar-wrapper">
-                            <div class="coach-face">
-                                <span class="coach-eyes">👓</span>
-                            </div>
-                        </div>
-                        <div class="speech-bubble">
-                            <div class="bubble-header">
-                                <div class="badge-status-row">
-                                    <span class="status-badge-icon" id="coach-badge-icon">📖</span>
-                                    <span class="status-badge-text" id="coach-badge-text">e4 is a book move</span>
-                                </div>
-                                <span class="bubble-eval" id="coach-eval-value">+0.24</span>
-                            </div>
-                            <p class="bubble-comment" id="coach-explanation">A fundamental first move that gives you a lot to consider.</p>
-                        </div>
-                    </div>
-
-                    <!-- Next key move button -->
-                    <button class="btn-next-key" id="btn-next-key-move">Next</button>
-
-                    <!-- Tabs inside sidebar -->
-                    <div class="sub-tabs-header">
-                        <button class="sub-tab-btn active" id="tab-btn-review" data-target="panel-review">Review</button>
-                        <button class="sub-tab-btn" id="tab-btn-moves" data-target="panel-moves">Moves</button>
-                        <button class="sub-tab-btn" id="tab-btn-engine" data-target="panel-engine">Engine</button>
-                    </div>
-
-                    <!-- Tab panels -->
-                    <div class="tab-panel-wrapper">
-                        
-                        <!-- Review Panel (Accuracies & Breakdown) -->
-                        <div class="tab-panel active" id="panel-review">
+                    <!-- Report Card Screen -->
+                    <div class="sidebar-view-panel" id="panel-report-card">
+                        <!-- Accuracy meters -->
+                        <div class="accuracy-card">
                             <div class="accuracy-row">
                                 <div class="acc-meter white">
                                     <span class="acc-label">White Accuracy</span>
-                                    <span class="acc-val" id="accuracy-white-text">0%</span>
+                                    <div class="acc-gauge-wrapper">
+                                        <svg class="acc-circle-svg" viewBox="0 0 100 100">
+                                            <circle class="acc-circle-bg" cx="50" cy="50" r="42"></circle>
+                                            <circle class="acc-circle-fill" id="accuracy-white-circle" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                                        </svg>
+                                        <span class="acc-val" id="accuracy-white-text">0%</span>
+                                    </div>
                                 </div>
                                 <div class="acc-meter black">
                                     <span class="acc-label">Black Accuracy</span>
-                                    <span class="acc-val" id="accuracy-black-text">0%</span>
-                                </div>
-                            </div>
-
-                            <!-- Move Classification Breakdown -->
-                            <div class="breakdown-grid">
-                                <div class="breakdown-row title-row">
-                                    <span>Classification</span>
-                                    <span style="text-align: center;">White</span>
-                                    <span style="text-align: center;">Black</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-brilliant); font-weight:600;"><span class="badge-dot dot-brilliant">★</span> Brilliant</span>
-                                    <span class="br-count" id="stat-w-brilliant">0</span>
-                                    <span class="br-count" id="stat-b-brilliant">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-great); font-weight:600;"><span class="badge-dot dot-great">♦</span> Great Move</span>
-                                    <span class="br-count" id="stat-w-great">0</span>
-                                    <span class="br-count" id="stat-b-great">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-best); font-weight:600;"><span class="badge-dot dot-best">✔</span> Best Move</span>
-                                    <span class="br-count" id="stat-w-best">0</span>
-                                    <span class="br-count" id="stat-b-best">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-excellent); font-weight:600;"><span class="badge-dot dot-excellent">✔</span> Excellent</span>
-                                    <span class="br-count" id="stat-w-excellent">0</span>
-                                    <span class="br-count" id="stat-b-excellent">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-good); font-weight:600;"><span class="badge-dot dot-good">✔</span> Good</span>
-                                    <span class="br-count" id="stat-w-good">0</span>
-                                    <span class="br-count" id="stat-b-good">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-book); font-weight:600;"><span class="badge-dot dot-book">📖</span> Book Move</span>
-                                    <span class="br-count" id="stat-w-book">0</span>
-                                    <span class="br-count" id="stat-b-book">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-forced); font-weight:600;"><span class="badge-dot dot-forced">🔒</span> Forced</span>
-                                    <span class="br-count" id="stat-w-forced">0</span>
-                                    <span class="br-count" id="stat-b-forced">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-inaccuracy); font-weight:600;"><span class="badge-dot dot-inaccuracy">?!</span> Inaccuracy</span>
-                                    <span class="br-count" id="stat-w-inaccuracy">0</span>
-                                    <span class="br-count" id="stat-b-inaccuracy">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-mistake); font-weight:600;"><span class="badge-dot dot-mistake">?</span> Mistake</span>
-                                    <span class="br-count" id="stat-w-mistake">0</span>
-                                    <span class="br-count" id="stat-b-mistake">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-miss); font-weight:600;"><span class="badge-dot dot-miss">✗</span> Miss</span>
-                                    <span class="br-count" id="stat-w-miss">0</span>
-                                    <span class="br-count" id="stat-b-miss">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-missed-win); font-weight:600;"><span class="badge-dot dot-missed_win">🏆</span> Missed Win</span>
-                                    <span class="br-count" id="stat-w-missed_win">0</span>
-                                    <span class="br-count" id="stat-b-missed_win">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-missed-draw); font-weight:600;"><span class="badge-dot dot-missed_draw">½</span> Missed Draw</span>
-                                    <span class="br-count" id="stat-w-missed_draw">0</span>
-                                    <span class="br-count" id="stat-b-missed_draw">0</span>
-                                </div>
-                                <div class="breakdown-row">
-                                    <span style="color: var(--color-blunder); font-weight:600;"><span class="badge-dot dot-blunder">??</span> Blunder</span>
-                                    <span class="br-count" id="stat-w-blunder">0</span>
-                                    <span class="br-count" id="stat-b-blunder">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Moves Log Panel -->
-                        <div class="tab-panel" id="panel-moves">
-                            <div class="moves-log-list" id="moves-list-container">
-                                <!-- moves dynamically generated -->
-                            </div>
-                        </div>
-
-                        <!-- Engine Tab -->
-                        <div class="tab-panel" id="panel-engine">
-                            <div class="engine-tab-content">
-                                <div class="engine-status-row">
-                                    <span>Stockfish 18 Engine</span>
-                                    <span class="engine-indicator-badge" id="engine-status-tag">READY</span>
-                                </div>
-                                <div class="engine-eval-display">
-                                    <span class="engine-eval-score" id="engine-eval-score">+0.00</span>
-                                    <div class="engine-eval-details">
-                                        <span id="engine-depth">Depth: --</span>
-                                        <span id="engine-nodes">Speed: --</span>
+                                    <div class="acc-gauge-wrapper">
+                                        <svg class="acc-circle-svg" viewBox="0 0 100 100">
+                                            <circle class="acc-circle-bg" cx="50" cy="50" r="42"></circle>
+                                            <circle class="acc-circle-fill" id="accuracy-black-circle" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+                                        </svg>
+                                        <span class="acc-val" id="accuracy-black-text">0%</span>
                                     </div>
                                 </div>
-                                <div class="engine-pv-line">
-                                    <div class="pv-label">Principal Variation:</div>
-                                    <div class="pv-text" id="line-1-pv">No analysis compiled. Paste a game or explore demo.</div>
+                            </div>
+                        </div>
+
+                        <!-- Move Classification Breakdown -->
+                        <div class="breakdown-grid">
+                            <div class="breakdown-row title-row">
+                                <span>Classification</span>
+                                <span style="text-align: center;">White</span>
+                                <span style="text-align: center;">Black</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-brilliant); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_brilliant.svg" class="breakdown-badge-icon" alt="★"> Brilliant
+                                </span>
+                                <span class="br-count" id="stat-w-brilliant">0</span>
+                                <span class="br-count" id="stat-b-brilliant">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-great); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_great.svg" class="breakdown-badge-icon" alt="♦"> Great Move
+                                </span>
+                                <span class="br-count" id="stat-w-great">0</span>
+                                <span class="br-count" id="stat-b-great">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-best); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_best.svg" class="breakdown-badge-icon" alt="✔"> Best Move
+                                </span>
+                                <span class="br-count" id="stat-w-best">0</span>
+                                <span class="br-count" id="stat-b-best">0</span>
+                            </div>
+                            <div class="breakdown-row collapsible-row collapsed">
+                                <span style="color: var(--color-excellent); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_excellent.svg" class="breakdown-badge-icon" alt="✔"> Excellent
+                                </span>
+                                <span class="br-count" id="stat-w-excellent">0</span>
+                                <span class="br-count" id="stat-b-excellent">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-good); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_good.svg" class="breakdown-badge-icon" alt="✔"> Good
+                                </span>
+                                <span class="br-count" id="stat-w-good">0</span>
+                                <span class="br-count" id="stat-b-good">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-book); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_book.svg" class="breakdown-badge-icon" alt="📖"> Book Move
+                                </span>
+                                <span class="br-count" id="stat-w-book">0</span>
+                                <span class="br-count" id="stat-b-book">0</span>
+                            </div>
+                            <div class="breakdown-row collapsible-row collapsed">
+                                <span style="color: var(--color-forced); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_forced.svg" class="breakdown-badge-icon" alt="🔒"> Forced
+                                </span>
+                                <span class="br-count" id="stat-w-forced">0</span>
+                                <span class="br-count" id="stat-b-forced">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-inaccuracy); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_inaccuracy.svg" class="breakdown-badge-icon" alt="?!"> Inaccuracy
+                                </span>
+                                <span class="br-count" id="stat-w-inaccuracy">0</span>
+                                <span class="br-count" id="stat-b-inaccuracy">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-mistake); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_mistake.svg" class="breakdown-badge-icon" alt="?"> Mistake
+                                </span>
+                                <span class="br-count" id="stat-w-mistake">0</span>
+                                <span class="br-count" id="stat-b-mistake">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-miss); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_miss.svg" class="breakdown-badge-icon" alt="✗"> Miss
+                                </span>
+                                <span class="br-count" id="stat-w-miss">0</span>
+                                <span class="br-count" id="stat-b-miss">0</span>
+                            </div>
+                            <div class="breakdown-row collapsible-row collapsed">
+                                <span style="color: var(--color-missed-win); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_missed-win.svg" class="breakdown-badge-icon" alt="🏆"> Missed Win
+                                </span>
+                                <span class="br-count" id="stat-w-missed_win">0</span>
+                                <span class="br-count" id="stat-b-missed_win">0</span>
+                            </div>
+                            <div class="breakdown-row collapsible-row collapsed">
+                                <span style="color: var(--color-missed-draw); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_missed-draw.svg" class="breakdown-badge-icon" alt="½"> Missed Draw
+                                </span>
+                                <span class="br-count" id="stat-w-missed_draw">0</span>
+                                <span class="br-count" id="stat-b-missed_draw">0</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span style="color: var(--color-blunder); font-weight:600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                    <img src="assets/moveIcons/icon_blunder.svg" class="breakdown-badge-icon" alt="??"> Blunder
+                                </span>
+                                <span class="br-count" id="stat-w-blunder">0</span>
+                                <span class="br-count" id="stat-b-blunder">0</span>
+                            </div>
+                            <div class="breakdown-row toggle-row" id="breakdown-toggle-row">
+                                <span style="grid-column: 1 / span 3; text-align: center; cursor: pointer; color: var(--text-secondary); font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 0.35rem;" id="breakdown-toggle-btn">
+                                    <span id="breakdown-toggle-text">Show More Classifications</span> <span id="breakdown-toggle-arrow">v</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Review Moves Actions -->
+                        <div class="report-card-actions">
+                            <button class="btn btn-primary btn-review-moves-green" id="btn-review-moves">
+                                Review Moves
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left: 6px;">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Game Review Moves List Screen -->
+                    <div class="sidebar-view-panel" id="panel-review-moves" style="display: none;">
+                        <!-- Coach explanation speech card -->
+                        <div class="coach-container">
+                            <div class="coach-avatar-wrapper">
+                                <div class="coach-svg-avatar">
+                                    <svg viewBox="0 0 36 36" width="36" height="36" fill="none">
+                                        <circle cx="18" cy="18" r="16" fill="var(--bg-surface)" stroke="var(--primary)" stroke-width="1.5"></circle>
+                                        <rect x="0" y="15" width="2" height="6" rx="1" fill="var(--primary)"></rect>
+                                        <rect x="34" y="15" width="2" height="6" rx="1" fill="var(--primary)"></rect>
+                                        <rect x="7" y="9" width="22" height="18" rx="4" fill="var(--bg-surface-2)" stroke="var(--primary-light)" stroke-width="1.5"></rect>
+                                        <rect x="10" y="12" width="16" height="7" rx="2" fill="#0f1412"></rect>
+                                        <circle cx="14" cy="15.5" r="1.5" fill="var(--color-brilliant)" class="coach-eye-glow"></circle>
+                                        <circle cx="22" cy="15.5" r="1.5" fill="var(--color-brilliant)" class="coach-eye-glow"></circle>
+                                        <line x1="14" y1="22" x2="22" y2="22" stroke="var(--primary-light)" stroke-width="1.5" stroke-linecap="round" class="coach-mouth-line"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="speech-bubble">
+                                <div class="bubble-header">
+                                    <div class="badge-status-row">
+                                        <span class="status-badge-icon" id="coach-badge-icon">📖</span>
+                                        <span class="status-badge-text" id="coach-badge-text">e4 is a book move</span>
+                                    </div>
+                                    <span class="bubble-eval" id="coach-eval-value">+0.24</span>
+                                </div>
+                                <p class="bubble-comment" id="coach-explanation">A fundamental first move that gives you a lot to consider.</p>
+                            </div>
+                        </div>
+
+                        <!-- Next key move button -->
+                        <button class="btn-next-key" id="btn-next-key-move">Next</button>
+
+                        <!-- Moves Log List Container -->
+                        <div class="moves-log-list" id="moves-list-container">
+                            <!-- moves dynamically generated -->
+                        </div>
+
+                        <!-- Collapsible Engine Stats -->
+                        <div class="engine-stats-banner">
+                            <div class="engine-stats-trigger" id="engine-stats-toggle">
+                                <span class="engine-stats-title">Stockfish 18 Engine</span>
+                                <span class="engine-eval-score-tiny" id="engine-eval-score">+0.00</span>
+                            </div>
+                            <div class="engine-stats-details-wrap" id="engine-stats-details" style="display: none;">
+                                <div class="engine-details-line">
+                                    <span id="engine-depth">Depth: --</span>
+                                    <span id="engine-nodes">Speed: --</span>
+                                </div>
+                                <div class="pv-text-line" id="line-1-pv">No analysis compiled.</div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Evaluation Graph -->
+                        <div class="eval-graph-card">
+                            <div class="eval-graph-header">
+                                <span class="eval-graph-title">EVALUATION LOG</span>
+                                <span id="graph-move-indicator">Move 0</span>
+                            </div>
+                            <div class="graph-wrapper" id="graph-container">
+                                <svg class="graph-svg" id="graph-svg" preserveAspectRatio="none">
+                                    <line x1="0" y1="20" x2="100%" y2="20" class="graph-midline"></line>
+                                    <path class="graph-fill" id="graph-fill" d=""></path>
+                                    <path class="graph-line" id="graph-line" d=""></path>
+                                    <line x1="0" y1="0" x2="0" y2="100%" class="graph-cursor" id="graph-cursor" style="display:none;"></line>
+                                    <line x1="0" y1="0" x2="0" y2="100%" class="graph-hover-cursor" id="graph-hover-cursor"></line>
+                                </svg>
+                                <div class="graph-tooltip" id="graph-tooltip" style="display: none;">
+                                    <div class="tooltip-move-header">
+                                        <span class="tooltip-move-num" id="tooltip-move-title">Move 12</span>
+                                        <span class="tooltip-badge" id="tooltip-move-badge">Best</span>
+                                    </div>
+                                    <div class="tooltip-eval-val" id="tooltip-move-eval">+1.24</div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Footer Navigation Buttons -->
+                        <div class="sidebar-nav-footer">
+                            <button class="nav-footer-btn" id="btn-first" title="First Position"></button>
+                            <button class="nav-footer-btn" id="btn-prev" title="Previous Move"></button>
+                            <button class="nav-footer-btn" id="btn-play" title="Auto Play"></button>
+                            <button class="nav-footer-btn" id="btn-next" title="Next Move"></button>
+                            <button class="nav-footer-btn" id="btn-last" title="Last Position"></button>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Interactive Evaluation Graph (bottom of sidebar above navigation) -->
-                <div class="eval-graph-card">
-                    <div class="eval-graph-header">
-                        <span class="eval-graph-title">EVALUATION LOG</span>
-                        <span id="graph-move-indicator">Move 0</span>
-                    </div>
-                    <div class="graph-wrapper" id="graph-container">
-                        <svg class="graph-svg" id="graph-svg" preserveAspectRatio="none">
-                            <line x1="0" y1="20" x2="100%" y2="20" class="graph-midline"></line>
-                            <path class="graph-fill" id="graph-fill" d=""></path>
-                            <path class="graph-line" id="graph-line" d=""></path>
-                            <line x1="0" y1="0" x2="0" y2="100%" class="graph-cursor" id="graph-cursor" style="display:none;"></line>
-                            <line x1="0" y1="0" x2="0" y2="100%" class="graph-hover-cursor" id="graph-hover-cursor"></line>
-                        </svg>
-                    </div>
                 </div>
-
-                <!-- Footer Navigation Buttons (First, Prev, Auto, Next, Last) -->
-                <div class="sidebar-nav-footer">
-                    <button class="nav-footer-btn" id="btn-first" title="First Position"></button>
-                    <button class="nav-footer-btn" id="btn-prev" title="Previous Move"></button>
-                    <button class="nav-footer-btn" id="btn-play" title="Auto Play"></button>
-                    <button class="nav-footer-btn" id="btn-next" title="Next Move"></button>
-                    <button class="nav-footer-btn" id="btn-last" title="Last Position"></button>
-                </div>
-
             </div>
         </div>
     </main>
+</div>
+</div>
 
     <!-- Loading overlay -->
     <div class="analysis-overlay" id="analysis-loading-overlay">
-        <div class="spinner">
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
-            <div class="spinner-ring"></div>
+        <div class="spinner-wrapper">
+            <div class="spinner">
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+                <div class="spinner-ring"></div>
+            </div>
+            <span class="spinner-piece">♞</span>
         </div>
         <div class="analysis-status-text" id="analysis-status-text">Booting Stockfish 18 Engine...</div>
         <div class="analysis-progress-bar">
             <div class="analysis-progress-fill" id="analysis-progress-fill"></div>
         </div>
+        <ul class="analysis-checklist" id="analysis-checklist">
+            <li class="checklist-item" id="chk-engine"><span class="chk-icon">⏳</span> Booting Stockfish 18 WASM</li>
+            <li class="checklist-item" id="chk-book"><span class="chk-icon">⏳</span> Scanning Opening Theory</li>
+            <li class="checklist-item" id="chk-centipawn"><span class="chk-icon">⏳</span> Analyzing Centipawn Evaluation</li>
+            <li class="checklist-item" id="chk-tactics"><span class="chk-icon">⏳</span> Extracting Tactical Motifs</li>
+            <li class="checklist-item" id="chk-coach"><span class="chk-icon">⏳</span> Generating Coach Commentary</li>
+        </ul>
     </div>
+
+    <!-- Modal removed since Upload PGN is now a dedicated screen -->
 
     <!-- Script imports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>

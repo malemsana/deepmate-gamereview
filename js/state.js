@@ -15,6 +15,7 @@ export const state = {
   selfAnalysisMoveIdx: -1,
   analysisQueue: [],
   queueIdx: 0,
+  isFlipped: false,
 
   reset() {
     this.chess.reset();

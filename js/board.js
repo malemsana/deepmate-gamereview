@@ -26,8 +26,11 @@ export function initBoard() {
     }
   });
   
-  for (let rank = 8; rank >= 1; rank--) {
-    for (let file = 1; file <= 8; file++) {
+  const ranks = state.isFlipped ? [1, 2, 3, 4, 5, 6, 7, 8] : [8, 7, 6, 5, 4, 3, 2, 1];
+  const files = state.isFlipped ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8];
+
+  ranks.forEach(rank => {
+    files.forEach(file => {
       const squareEl = document.createElement('div');
       const isLight = (rank + file) % 2 === 1;
       
@@ -38,13 +41,15 @@ export function initBoard() {
       squareEl.id = `square-${squareName}`;
       squareEl.setAttribute('data-square', squareName);
       
-      if (file === 1) {
+      // Label rank on left column
+      if (file === (state.isFlipped ? 8 : 1)) {
         const rankLabel = document.createElement('span');
         rankLabel.className = 'coordinate rank';
         rankLabel.innerText = rank;
         squareEl.appendChild(rankLabel);
       }
-      if (rank === 1) {
+      // Label file on bottom row
+      if (rank === (state.isFlipped ? 8 : 1)) {
         const fileLabel = document.createElement('span');
         fileLabel.className = 'coordinate file';
         fileLabel.innerText = fileChar;
@@ -74,8 +79,8 @@ export function initBoard() {
       });
       
       boardEl.appendChild(squareEl);
-    }
-  }
+    });
+  });
 }
 
 // Redraw board pieces
@@ -129,6 +134,27 @@ export function updateBoardDisplay() {
   
   highlightLastMovePlayed();
   updateMoveBadge();
+
+  // Highlight king if in check
+  document.querySelectorAll('.square').forEach(s => s.classList.remove('square-check-alert'));
+  if (state.chess.in_check()) {
+    const turn = state.chess.turn();
+    const boardState = state.chess.board();
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const sq = boardState[r][c];
+        if (sq && sq.type === 'k' && sq.color === turn) {
+          const fileChar = String.fromCharCode(96 + c + 1);
+          const rank = 8 - r;
+          const kingSquareName = fileChar + rank;
+          const kingSquareEl = document.getElementById(`square-${kingSquareName}`);
+          if (kingSquareEl) {
+            kingSquareEl.classList.add('square-check-alert');
+          }
+        }
+      }
+    }
+  }
 }
 
 export function highlightLastMovePlayed() {
